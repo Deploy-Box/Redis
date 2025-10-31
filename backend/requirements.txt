@@ -1,0 +1,4 @@
+flask
+flask-socketio>=5.0.0
+redis
+eventlet
