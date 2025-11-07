@@ -1,7 +1,7 @@
 import eventlet
 eventlet.monkey_patch()  # must come first!
 
-from flask import Flask, render_template
+from flask import Flask, render_template, Response
 from flask_socketio import SocketIO, emit
 import time
 import os
@@ -13,15 +13,11 @@ app.config['SECRET_KEY'] = 'supersecret'
 # Redis + eventlet setup
 socketio = SocketIO(app, message_queue='redis://127.0.0.1:6379', cors_allowed_origins="*")
 
-app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../frontend')
+app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-@app.route('/<path:path>')
-def static_files(path):
-    return render_template(path)
+    return "Hello World!"
 
 # --- Handle incoming messages ---
 @socketio.on('message')

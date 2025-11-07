@@ -1,5 +1,5 @@
 // Connect to backend Socket.IO server
-const socket = io('http://localhost:5000', { transports: ['polling'] });
+const socket = io('/api/', { transports: ['polling'] });
 
 const chatWindow = document.getElementById('chat-window');
 const chatForm = document.getElementById('chat-form');
