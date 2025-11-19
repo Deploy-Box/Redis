@@ -1,5 +1,11 @@
-// Connect to backend Socket.IO server
-const socket = io('/api/', { transports: ['polling'] });
+// Connect through nginx proxy (same origin)
+const socket = io({
+    path: '/socket.io/',
+    transports: ['polling', 'websocket'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 10
+});
 
 const chatWindow = document.getElementById('chat-window');
 const chatForm = document.getElementById('chat-form');
@@ -17,11 +23,19 @@ function appendMessage(msg) {
 socket.on('connect', function() {
     connectionStatus.textContent = 'Connected';
     connectionStatus.style.color = 'green';
+    appendMessage('System: Connected to server');
 });
 
-socket.on('disconnect', function() {
+socket.on('connect_error', function(error) {
+    connectionStatus.textContent = 'Connection error:';
+    connectionStatus.style.color = 'red';
+    appendMessage('System: Connection error:' + error);
+});
+
+socket.on('disconnect', function(reason) {
     connectionStatus.textContent = 'Disconnected';
     connectionStatus.style.color = 'red';
+    appendMessage('System: Disconnected from server');
 });
 
 chatForm.addEventListener('submit', function(e) {
@@ -29,12 +43,21 @@ chatForm.addEventListener('submit', function(e) {
     const msg = chatInput.value.trim();
     if (msg) {
         socket.emit('message', { message: msg });
+        appendMessage('You: ' + msg);
         chatInput.value = '';
     }
 });
 
 // Listen for incoming messages from backend
 socket.on('response', function(msg) {
-    console.log('Received message from backend:', msg.message);
-    appendMessage('Friend: ' + msg.message);
+    console.log('Received message from backend:', msg);
+    if (msg.message) {
+        appendMessage('Server: ' + msg.message);
+    }
+});
+
+// Listen for server updates
+socket.on('server_update', function(data) {
+    console.log('Server update:', data);
+    appendMessage('Server: ' + data.message);
 });

@@ -17,5 +17,5 @@ EXPOSE 5000
 # Set environment variables (optional)
 ENV FLASK_ENV=production
 
-# Run the app
-CMD ["python", "app.py"]
+# Run the app with gunicorn
+CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "app:app"]

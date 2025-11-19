@@ -11,7 +11,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'supersecret'
 
 # Redis + eventlet setup
-socketio = SocketIO(app, message_queue='redis://127.0.0.1:6379', cors_allowed_origins="*")
+socketio = SocketIO(app, 
+                   cors_allowed_origins="*",
+                   async_mode='threading',
+                   logger=True,
+                   engineio_logger=True,
+                   ping_timeout=60,
+                   ping_interval=25)
 
 app.static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')
 
@@ -38,13 +44,18 @@ def background_emitter():
         socketio.emit('server_update', {'message': f'Server time: {time.strftime("%H:%M:%S")}'})
         time.sleep(5)
 
-# Launch background thread on startup
+# Move background task outside connect handler
+background_task_started = False
+
 @socketio.on('connect')
 def on_connect():
+    global background_task_started
     print("Client connected")
     emit('response', {'message': 'Welcome!'})
-    # Start background emitter once
-    socketio.start_background_task(target=background_emitter)
+    # Start background emitter only once
+    if not background_task_started:
+        background_task_started = True
+        socketio.start_background_task(target=background_emitter)
 
 if __name__ == '__main__':
     print("Starting Flask-SocketIO app with Redis backend and emit logic...")
