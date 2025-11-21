@@ -48,6 +48,13 @@ resource "azurerm_linux_virtual_machine" "res-1" {
     sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     sudo chmod +x /usr/local/bin/docker-compose
 
+    # Download application files
+    curl -L -o /opt/app/main.zip https://github.com/Deploy-Box/Redis/archive/refs/heads/main.zip
+
+    # Unzip application files
+    sudo dnf install -y unzip
+    sudo unzip /opt/app/main.zip -d /opt/app
+
     # Create systemd service file for docker-compose
     cat <<'SERVICE' | sudo tee /etc/systemd/system/docker-compose.service
     [Unit]
@@ -59,16 +66,16 @@ resource "azurerm_linux_virtual_machine" "res-1" {
     [Service]
     Type=oneshot
     RemainAfterExit=yes
-    WorkingDirectory=/opt/app
+    WorkingDirectory=/opt/app/Redis-main
 
     # Pull images and start the stack
-    ExecStart=/usr/bin/docker-compose up -d
+    ExecStart=/usr/local/bin/docker-compose up -d
 
     # Stop the stack
-    ExecStop=/usr/bin/docker-compose down
+    ExecStop=/usr/local/bin/docker-compose down
 
     # Restart containers if they exit
-    ExecReload=/usr/bin/docker-compose restart
+    ExecReload=/usr/local/bin/docker-compose restart
 
     TimeoutStartSec=0
 
